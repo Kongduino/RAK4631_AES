@@ -2,7 +2,6 @@
 
 This is a demo for my extension to the [Adafruit_nRFCrypto](https://github.com/Kongduino/Adafruit_nRFCrypto), which adds AES encryption. It adds a class, nRFCrypto_AES:
 
-
 ```c
 class nRFCrypto_AES {
   public:
@@ -22,7 +21,11 @@ class nRFCrypto_AES {
 };
 ```
 
-The `Process` function does everything for you: ECB/CBC, and encrypt/decrypt. The sample code here shows how to do all 4 operations.
+The `Process` function does everything for you: ECB/CBC, and encrypt/decrypt.
+
+## Installation
+
+Remove (and possibly save somewhere) the original version of the Adafruit library, and install mine. Since the only thing it does is **add** things, without removing anything, it is safe to use as a replacement. After that you use the usual `#include "Adafruit_nRFCrypto.h"` statement, and create an `nRFCrypto_AES` object. The sample code here shows how to do all 4 operations.
 
 ```c
 void testAES() {

@@ -79,6 +79,5 @@ void testAES() {
   } else {
     hexDump(pDataRe, 64);
   }
-
   nRFCrypto.end();
 }
