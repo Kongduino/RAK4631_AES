@@ -39,14 +39,24 @@ void loop() {
 }
 
 void testAES() {
+  Serial.println("AES test");
   nRFCrypto.begin();
   nRFCrypto_AES aes;
   if (!aes.begin()) {
     Serial.println("Could not start AES!");
     return;
   }
-  uint8_t myIV[16] =  {0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f};
-  uint8_t pKey[16] = {0xC6, 0xBB, 0x2D, 0x94, 0x90, 0xB9, 0x65, 0x23, 0x98, 0xED, 0x83, 0x3F, 0x9B, 0x9D, 0x02, 0xCC};
+  Serial.println("======================");
+  Serial.println(" * Random");
+  Serial.println("======================");
+  uint8_t myIV[16];
+  nRFCrypto.Random.generate(myIV, 16);
+  Serial.println("myIV:");
+  hexDump((char*)myIV, 16);
+  uint8_t pKey[16];
+  nRFCrypto.Random.generate(pKey, 16);
+  Serial.println("pKey:");
+  hexDump((char*)pKey, 16);
   char pDataIn[65] = "Ca va chez vous les enfants...? Sinon il faut me le dire, hein ?";
   char smallData[24] = {
     0xb8, 0x4d, 0x39, 0x1a, 0x03, 0x3a, 0x0f, 0xed, 0x82, 0x97, 0x0d, 0x05,
