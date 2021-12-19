@@ -111,6 +111,25 @@ void testAES() {
   } else {
     hexDump(pDataRe, 64);
   }
+
+  Serial.println(" * Small Blocks");
+  Serial.println("----------------------");
+  memset(pDataOut, 0, 65);
+  memset(pDataRe, 0, 65);
+  hexDump(pDataIn, 12);
+  err = aes.Process(pDataIn, 12, myIV, pKey, 16, pDataOut, aes.encryptFlag, aes.cbcMode);
+  if (err < 0) {
+    Serial.println("Error " + String(err));
+  } else {
+    hexDump(pDataOut, 16);
+  }
+  err = aes.Process(pDataOut, 16, myIV, pKey, 16, pDataRe, aes.decryptFlag, aes.cbcMode);
+  if (err < 0) {
+    Serial.println("Error " + String(err));
+  } else {
+    hexDump(pDataRe, 12);
+  }
+
   Serial.println("======================");
   Serial.println(" * CTR");
   Serial.println("======================");
@@ -127,6 +146,24 @@ void testAES() {
     Serial.println("Error " + String(err));
   } else {
     hexDump(pDataRe, 64);
+  }
+
+  Serial.println(" * Small Blocks");
+  Serial.println("----------------------");
+  memset(pDataOut, 0, 65);
+  memset(pDataRe, 0, 65);
+  hexDump(pDataIn, 17);
+  err = aes.Process(pDataIn, 17, myIV, pKey, 16, pDataOut, aes.encryptFlag, aes.ctrMode);
+  if (err < 0) {
+    Serial.println("Error " + String(err));
+  } else {
+    hexDump(pDataOut, 32);
+  }
+  err = aes.Process(pDataOut, 64, myIV, pKey, 16, pDataRe, aes.decryptFlag, aes.ctrMode);
+  if (err < 0) {
+    Serial.println("Error " + String(err));
+  } else {
+    hexDump(pDataRe, 17);
   }
 
   nRFCrypto.end();
