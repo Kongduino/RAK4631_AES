@@ -45,12 +45,20 @@ void testAES() {
     Serial.println("Could not start AES!");
     return;
   }
+  uint8_t myIV[16] =  {0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f};
   uint8_t pKey[16] = {0xC6, 0xBB, 0x2D, 0x94, 0x90, 0xB9, 0x65, 0x23, 0x98, 0xED, 0x83, 0x3F, 0x9B, 0x9D, 0x02, 0xCC};
+  uint8_t lKey[32] = {
+    0xb3, 0xf8, 0x68, 0xea, 0x4d, 0xde, 0x61, 0x92, 0x03, 0xa3, 0x11, 0x1a, 0x0f, 0x4d, 0x19, 0x07,
+    0x97, 0x26, 0x8e, 0x9c, 0xcd, 0x44, 0x40, 0x92, 0x66, 0x18, 0x5e, 0x23, 0x1a, 0x16, 0x52, 0x5d
+  };
   char pDataIn[65] = "Ca va chez vous les enfants...? Sinon il faut me le dire, hein ?";
   char pDataOut[65] = {0};
   char pDataRe[65] = {0};
   size_t dataOutBuffSize;
   Serial.println("AES test");
+  Serial.println("======================");
+  Serial.println(" * ECB");
+  Serial.println("======================");
   int err = aes.Process(pDataIn, 64, myIV, pKey, 16, pDataOut, aes.encryptFlag, aes.ecbMode);
   // myIV is not needed since it's ECB, but we need the parameter.
   // Could pass just about anything
@@ -65,8 +73,11 @@ void testAES() {
   } else {
     hexDump(pDataRe, 64);
   }
-  uint8_t myIV[16] =  {0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f};
+  Serial.println("======================");
+  Serial.println(" * CBC");
+  Serial.println("======================");
   memset(pDataOut, 0, 65);
+  memset(pDataRe, 0, 65);
   err = aes.Process(pDataIn, 64, myIV, pKey, 16, pDataOut, aes.encryptFlag, aes.cbcMode);
   if (err < 0) {
     Serial.println("Error " + String(err));
@@ -79,5 +90,23 @@ void testAES() {
   } else {
     hexDump(pDataRe, 64);
   }
+  Serial.println("======================");
+  Serial.println(" * CTR");
+  Serial.println("======================");
+  memset(pDataOut, 0, 65);
+  memset(pDataRe, 0, 65);
+  err = aes.Process(pDataIn, 64, myIV, pKey, 16, pDataOut, aes.encryptFlag, aes.ctrMode);
+  if (err < 0) {
+    Serial.println("Error " + String(err));
+  } else {
+    hexDump(pDataOut, 64);
+  }
+  err = aes.Process(pDataOut, 64, myIV, pKey, 16, pDataRe, aes.decryptFlag, aes.ctrMode);
+  if (err < 0) {
+    Serial.println("Error " + String(err));
+  } else {
+    hexDump(pDataRe, 64);
+  }
+
   nRFCrypto.end();
 }
