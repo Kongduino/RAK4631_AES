@@ -1,5 +1,7 @@
 #include <Adafruit_TinyUSB.h> // for Serial
 #include "Adafruit_nRFCrypto.h"
+//#include "ecc/nRFCrypto_ECC.h"
+#include "nRF52840_DHKE.h"
 
 void hexDump(char *buf, int len) {
   char alphabet[17] = "0123456789abcdef";
@@ -174,6 +176,131 @@ void testAES() {
     Serial.println("Error " + String(err));
   } else {
     hexDump(pDataRe, 17);
+  }
+
+  // This breaks the code hard...
+  // nRFCrypto_ECC_PrivateKey AlicePrivate, BobPrivate;
+  // nRFCrypto_ECC_PublicKey  AlicePublic,  BobPublic;
+  // nRFCrypto_ECC ecc;
+  // if (!ecc.begin()) {
+  //   Serial.println("ECC init error.");
+  // }
+  // ^____ Even these 6 lines alone cause a hard fault...
+  // ecc.genKeyPair(AlicePrivate, AlicePublic);
+  // ecc.genKeyPair(BobPrivate, BobPublic);
+  // uint8_t secret0[32];
+  // uint8_t secret1[32];
+  // ecc.SVDP_DH(AlicePrivate, BobPublic, (uint8_t*)&secret0, 32);
+  // ecc.SVDP_DH(AlicePrivate, BobPublic, (uint8_t*)&secret1, 32);
+  // bool same = true;
+  // for (uint8_t ix = 0; ix < 32; ix++) {
+  //   if (secret0[ix] != secret1[ix]) {
+  //     same = false;
+  //     break;
+  //   }
+  // }
+  // if (same) Serial.println("SVDP_DH passed!");
+  // else Serial.println("SVDP_DH failed!");
+
+  Serial.println("======================");
+  Serial.println(" * DHKE");
+  Serial.println("======================");
+  nrf52_DHKE_Set Alice;
+  nrf52_DHKE_Set Bob;
+  nrf52_DHKE_Set Carl;
+  if (!Alice.begin()) {
+    Serial.println("Error initing Alice!");
+    return;
+  }
+  if (!Bob.begin()) {
+    Serial.println("Error initing Bob!");
+    return;
+  }
+  if (!Carl.begin()) {
+    Serial.println("Error initing Bob!");
+    return;
+  }
+
+  Serial.println(" . Alice:");
+  Serial.println("     Public Key:");
+  hexDump((char*)Alice.getPub().oneChunk, 32);
+  Serial.println("     Private Key:");
+  hexDump((char*)Alice.getPvt().oneChunk, 32);
+
+  Serial.println(" . Bob:");
+  Serial.println("     Public Key:");
+  hexDump((char*)Bob.getPub().oneChunk, 32);
+  Serial.println("     Private Key:");
+  hexDump((char*)Bob.getPvt().oneChunk, 32);
+
+  Serial.println(" . Carl:");
+  Serial.println("     Public Key:");
+  hexDump((char*)Carl.getPub().oneChunk, 32);
+  Serial.println("     Private Key:");
+  hexDump((char*)Carl.getPvt().oneChunk, 32);
+
+  memset(pDataOut, 0, 65);
+  memset(pDataRe, 0, 65);
+  Serial.println(" . Alice:");
+  Serial.println("----------------------");
+  Serial.println("> Plaintext:");
+  hexDump(pDataIn, 64);
+  Serial.println("> Encryption:");
+  err = Alice.encrypt(pDataIn, 64, pDataOut, Bob.getPub());
+  if (err == 0) {
+    hexDump(pDataOut, 64);
+  } else {
+    Serial.println("Encryption error: " + String(err));
+    return;
+  }
+  Serial.println("> Decryption:");
+  err = Alice.decrypt(pDataOut, 64, pDataRe, Bob.getPub());
+  if (err == 0) {
+    hexDump(pDataRe, 64);
+  } else {
+    Serial.println("Encryption error: " + String(err));
+    return;
+  }
+  memset(pDataRe, 0, 65);
+  Serial.println("> Carl Snooping In:");
+  err = Carl.decrypt(pDataOut, 64, pDataRe, Bob.getPub());
+  if (err == 0) {
+    hexDump(pDataRe, 64);
+  } else {
+    Serial.println("Encryption error: " + String(err));
+    return;
+  }
+
+  memset(pDataOut, 0, 65);
+  memset(pDataRe, 0, 65);
+  Serial.println(" . Bob:");
+  Serial.println("----------------------");
+  Serial.println("> Plaintext:");
+  hexDump(pDataIn, 64);
+  Serial.println("> Encryption:");
+  err = Bob.encrypt(pDataIn, 64, pDataOut, Alice.getPub());
+  if (err == 0) {
+    hexDump(pDataOut, 64);
+  } else {
+    Serial.println("Encryption error: " + String(err));
+    return;
+  }
+  Serial.println("> Decryption:");
+  err = Bob.decrypt(pDataOut, 64, pDataRe, Alice.getPub());
+  if (err == 0) {
+    hexDump(pDataRe, 64);
+  } else {
+    Serial.println("Encryption error: " + String(err));
+    return;
+  }
+  memset(pDataRe, 0, 65);
+  Serial.println("> Carl Snooping In:");
+  err = Carl.decrypt(pDataOut, 64, pDataRe, Bob.getPub());
+  if (err == 0) {
+    hexDump(pDataRe, 64);
+  } else {
+    Serial.println("Encryption error: " + String(err));
+    return;
   }
 
   nRFCrypto.end();
