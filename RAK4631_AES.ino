@@ -1,6 +1,5 @@
 #include <Adafruit_TinyUSB.h> // for Serial
 #include "Adafruit_nRFCrypto.h"
-//#include "ecc/nRFCrypto_ECC.h"
 #include "nRF52840_DHKE.h"
 
 void hexDump(char *buf, int len) {
@@ -32,9 +31,11 @@ void hexDump(char *buf, int len) {
 
 void setup() {
   pinMode(LED_BUILTIN, OUTPUT);
+  digitalWrite(LED_BUILTIN, HIGH);
   while (!Serial) delay(10);
   delay(1000);
   testAES();
+  digitalWrite(LED_BUILTIN, LOW);
 }
 
 void loop() {
@@ -178,30 +179,6 @@ void testAES() {
     hexDump(pDataRe, 17);
   }
 
-  // This breaks the code hard...
-  // nRFCrypto_ECC_PrivateKey AlicePrivate, BobPrivate;
-  // nRFCrypto_ECC_PublicKey  AlicePublic,  BobPublic;
-  // nRFCrypto_ECC ecc;
-  // if (!ecc.begin()) {
-  //   Serial.println("ECC init error.");
-  // }
-  // ^____ Even these 6 lines alone cause a hard fault...
-  // ecc.genKeyPair(AlicePrivate, AlicePublic);
-  // ecc.genKeyPair(BobPrivate, BobPublic);
-  // uint8_t secret0[32];
-  // uint8_t secret1[32];
-  // ecc.SVDP_DH(AlicePrivate, BobPublic, (uint8_t*)&secret0, 32);
-  // ecc.SVDP_DH(AlicePrivate, BobPublic, (uint8_t*)&secret1, 32);
-  // bool same = true;
-  // for (uint8_t ix = 0; ix < 32; ix++) {
-  //   if (secret0[ix] != secret1[ix]) {
-  //     same = false;
-  //     break;
-  //   }
-  // }
-  // if (same) Serial.println("SVDP_DH passed!");
-  // else Serial.println("SVDP_DH failed!");
-
   Serial.println("======================");
   Serial.println(" * DHKE");
   Serial.println("======================");
@@ -241,6 +218,8 @@ void testAES() {
 
   memset(pDataOut, 0, 65);
   memset(pDataRe, 0, 65);
+  Serial.println(" ECB:");
+  Serial.println("----------------------");
   Serial.println(" . Alice:");
   Serial.println("----------------------");
   Serial.println("> Plaintext:");
@@ -296,6 +275,72 @@ void testAES() {
   memset(pDataRe, 0, 65);
   Serial.println("> Carl Snooping In:");
   err = Carl.decrypt(pDataOut, 64, pDataRe, Bob.getPub());
+  if (err == 0) {
+    hexDump(pDataRe, 64);
+  } else {
+    Serial.println("Encryption error: " + String(err));
+    return;
+  }
+
+  memset(pDataOut, 0, 65);
+  memset(pDataRe, 0, 65);
+  Serial.println(" CBC:");
+  Serial.println("----------------------");
+  Serial.println(" . Alice:");
+  Serial.println("----------------------");
+  Serial.println("> Plaintext:");
+  hexDump(pDataIn, 64);
+  Serial.println("> Encryption:");
+  err = Alice.encrypt(myIV, pDataIn, 64, pDataOut, Bob.getPub());
+  if (err == 0) {
+    hexDump(pDataOut, 64);
+  } else {
+    Serial.println("Encryption error: " + String(err));
+    return;
+  }
+  Serial.println("> Decryption:");
+  err = Alice.decrypt(myIV, pDataOut, 64, pDataRe, Bob.getPub());
+  if (err == 0) {
+    hexDump(pDataRe, 64);
+  } else {
+    Serial.println("Encryption error: " + String(err));
+    return;
+  }
+  memset(pDataRe, 0, 65);
+  Serial.println("> Carl Snooping In:");
+  err = Carl.decrypt(myIV, pDataOut, 64, pDataRe, Bob.getPub());
+  if (err == 0) {
+    hexDump(pDataRe, 64);
+  } else {
+    Serial.println("Encryption error: " + String(err));
+    return;
+  }
+
+  memset(pDataOut, 0, 65);
+  memset(pDataRe, 0, 65);
+  Serial.println(" . Bob:");
+  Serial.println("----------------------");
+  Serial.println("> Plaintext:");
+  hexDump(pDataIn, 64);
+  Serial.println("> Encryption:");
+  err = Bob.encrypt(myIV, pDataIn, 64, pDataOut, Alice.getPub());
+  if (err == 0) {
+    hexDump(pDataOut, 64);
+  } else {
+    Serial.println("Encryption error: " + String(err));
+    return;
+  }
+  Serial.println("> Decryption:");
+  err = Bob.decrypt(myIV, pDataOut, 64, pDataRe, Alice.getPub());
+  if (err == 0) {
+    hexDump(pDataRe, 64);
+  } else {
+    Serial.println("Encryption error: " + String(err));
+    return;
+  }
+  memset(pDataRe, 0, 65);
+  Serial.println("> Carl Snooping In:");
+  err = Carl.decrypt(myIV, pDataOut, 64, pDataRe, Bob.getPub());
   if (err == 0) {
     hexDump(pDataRe, 64);
   } else {
