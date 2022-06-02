@@ -1,6 +1,6 @@
 # RAK4631_AES
 
-This is a demo for my extension to the [Adafruit_nRFCrypto](https://github.com/Kongduino/Adafruit_nRFCrypto), which adds AES encryption. It adds a class, nRFCrypto_AES:
+This is a demo for my extension to the [Adafruit_nRFCrypto](https://github.com/Kongduino/Adafruit_nRFCrypto), which adds AES encryption to the Wisblock RAK4631. It adds a class, nRFCrypto_AES:
 
 ```c
 class nRFCrypto_AES {
